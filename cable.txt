@@ -1,0 +1,16 @@
+
+ (Looking into the jack)
+       ___________
+      /           \
+     |  1   2   3  |
+     |  4  _5_  6  |
+     |    /   \    | 
+      ----     ----
+
+
+1 - 3.3V  - black
+2 - Device Detect
+3 - SDA - red
+4 - SCL - yellow
+5 - none
+6 - GND - orange

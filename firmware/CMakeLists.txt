@@ -26,10 +26,13 @@ endif()
 
 add_executable(Classic2AmigaMouseFW
         main.c
+        # classic_controller.c
         )
 
 # pull in common dependencies
-target_link_libraries(Classic2AmigaMouseFW pico_stdlib)
+target_link_libraries(Classic2AmigaMouseFW
+    pico_stdlib
+    hardware_i2c)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(Classic2AmigaMouseFW)
