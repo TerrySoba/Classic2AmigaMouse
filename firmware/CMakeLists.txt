@@ -37,6 +37,9 @@ target_link_libraries(Classic2AmigaMouseFW
 # create map/bin/hex file etc.
 pico_add_extra_outputs(Classic2AmigaMouseFW)
 
+pico_enable_stdio_usb(Classic2AmigaMouseFW 0)
+pico_enable_stdio_uart(Classic2AmigaMouseFW 1)
+
 add_custom_target(flash
     COMMAND ${CMAKE_SOURCE_DIR}/flash.sh
     DEPENDS Classic2AmigaMouseFW.elf
