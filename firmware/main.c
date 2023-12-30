@@ -6,6 +6,12 @@
 
 #define CLASSIC_CONTROLLER_ADDR 0x52 /* address of classic controller and nunchuck */
 
+#define DEAD_ZONE_SIZE 4
+#define ANALOG_DIVIDER 4
+#define CYCLES_PER_INTERVAL_DIGITAL 10
+
+
+
 bool initializeClassicController() {
     const uint8_t initData[] = { 0x40, 0x00 };
     const size_t initDataSize = sizeof(initData) / sizeof(initData[0]);
@@ -23,7 +29,7 @@ typedef struct ClassicControllerData_ {
 } ClassicControllerData;
 
 
-uint32_t applyDeadzone(int32_t value, uint32_t deadzone) {
+int32_t applyDeadzone(int32_t value, uint32_t deadzone) {
     if (value > 0) {
         value -= deadzone;
         if (value < 0) {
@@ -235,6 +241,7 @@ int main() {
         setAmigaOutput(AMIGA_RIGHT_BUTTON, buttonPressed(CLASSIC_BTN_b, &controllerData));
 
 
+        // handle digital joystick
         if (buttonPressed(CLASSIC_BTN_left, &controllerData)) {
             xAxis -= 1;
         }
@@ -248,7 +255,15 @@ int main() {
             yAxis += 1;
         }
        
-        const int32_t CYCLES_PER_INTERVAL = 10;
+
+        // handle analog joystick
+        int32_t analogX = applyDeadzone(controllerData.leftStickX, DEAD_ZONE_SIZE) / ANALOG_DIVIDER;
+        int32_t analogY = applyDeadzone(controllerData.leftStickY, DEAD_ZONE_SIZE) / ANALOG_DIVIDER;
+        xAxis += analogX;
+        yAxis += analogY;
+
+
+        const int32_t CYCLES_PER_INTERVAL = CYCLES_PER_INTERVAL_DIGITAL;
 
         if (xAxis > CYCLES_PER_INTERVAL) {
             xAxis -= CYCLES_PER_INTERVAL;
@@ -268,7 +283,8 @@ int main() {
         }
 
         // printf("xAxis: %6d, yAxis: %6d\n", xAxis, yAxis);
-        printf("x: %6d, y: %6d\n", applyDeadzone(controllerData.leftStickX, 2), applyDeadzone(controllerData.leftStickY, 2));
+        printf("x: %6d, y: %6d\n", analogX, analogY);
+            
 
         sleep_ms(1);
     }
