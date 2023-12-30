@@ -18,11 +18,27 @@ bool initializeClassicController() {
 
 typedef struct ClassicControllerData_ {
     uint16_t buttonData;
-    uint8_t leftStickX;
-    uint8_t leftStickY;
-    uint8_t rightStickX;
-    uint8_t rightStickY;
+    int8_t leftStickX;
+    int8_t leftStickY;
 } ClassicControllerData;
+
+
+uint32_t applyDeadzone(int32_t value, uint32_t deadzone) {
+    if (value > 0) {
+        value -= deadzone;
+        if (value < 0) {
+            value = 0;
+        }
+    }
+    else if (value < 0) {
+        value += deadzone;
+        if (value > 0) {
+            value = 0;
+        }
+    }
+    return value;
+}
+
 
 bool readClassicControllerData(ClassicControllerData* controllerData) {
     const uint8_t zeroData[] = { 0x00 };
@@ -48,6 +64,10 @@ bool readClassicControllerData(ClassicControllerData* controllerData) {
 
     controllerData->buttonData = buf[4] | (buf[5] << 8);
 
+
+    controllerData->leftStickX = (buf[0] & 0x3F) - 32;
+    controllerData->leftStickY = (buf[1] & 0x3F) - 32;
+    
     return true;
 }
 
@@ -247,7 +267,8 @@ int main() {
             advanceAxisState(AXIS_VERTICAL, &yAxisState, -1);
         }
 
-        printf("xAxis: %6d, yAxis: %6d\n", xAxis, yAxis);
+        // printf("xAxis: %6d, yAxis: %6d\n", xAxis, yAxis);
+        printf("x: %6d, y: %6d\n", applyDeadzone(controllerData.leftStickX, 2), applyDeadzone(controllerData.leftStickY, 2));
 
         sleep_ms(1);
     }
