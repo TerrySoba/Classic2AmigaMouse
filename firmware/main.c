@@ -6,10 +6,16 @@
 
 #define CLASSIC_CONTROLLER_ADDR 0x52 /* address of classic controller and nunchuck */
 
-#define DEAD_ZONE_SIZE 4
-#define ANALOG_DIVIDER 4
-#define CYCLES_PER_INTERVAL_DIGITAL 10
+// #define DEAD_ZONE_SIZE 4
+// #define ANALOG_DIVIDER 4
+#define CYCLES_PER_INTERVAL_DIGITAL 4
 
+
+#define I2C_POLL_DIVIDER 4
+
+
+#define toSubpixel(x) ((x) << 4)
+#define toPixel(x) ((x) >> 4)
 
 
 bool initializeClassicController() {
@@ -54,7 +60,7 @@ bool readClassicControllerData(ClassicControllerData* controllerData) {
         return false;
     }
 
-    sleep_ms(1);
+    sleep_us(500);
 
     // now receive controller data
     uint8_t buf[6];
@@ -193,8 +199,28 @@ bool buttonPressed(ClassicButtons button, ClassicControllerData* controllerData)
 }
 
 
+
+static const int32_t MOUSE_SPEED_MAP[] = { 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4, 5, 6, 7, 8, 16, 16, 16, 16, 32, 32, 32, 32, 32, 32, 32 };
+static const int32_t MOUSE_SPEED_MAP_SIZE = sizeof(MOUSE_SPEED_MAP) / sizeof(MOUSE_SPEED_MAP[0]);
+
+int32_t mapMouseSpeed(int32_t value) {
+    int32_t sign = value < 0 ? -1 : 1;
+    value = abs(value);
+
+    int32_t out = 0;
+    if (value >= MOUSE_SPEED_MAP_SIZE) {
+        out = MOUSE_SPEED_MAP[MOUSE_SPEED_MAP_SIZE - 1];
+    } else {
+        out = MOUSE_SPEED_MAP[value];
+    }
+    return sign * out;
+}
+
 int main() {
-    stdio_init_all();
+
+    uint8_t counter = 0;
+
+    // stdio_init_all();
     initializeAmigaOutputGPIO();
 
     // init LED pin
@@ -227,14 +253,18 @@ int main() {
     uint32_t xAxisState = 0;
     uint32_t yAxisState = 0;
 
+    ClassicControllerData controllerData;
+
     while (true) {
-        ClassicControllerData controllerData;
-        ret = readClassicControllerData(&controllerData);
-        if (!ret) {
-            goto init;
+        if (counter % I2C_POLL_DIVIDER == 0)
+        {
+            ret = readClassicControllerData(&controllerData);
+            if (!ret) {
+                goto init;
+            }
         }
         gpio_put(LED_PIN, controllerData.buttonData & CLASSIC_BTN_a);
-        
+        ++counter;
 
         setAmigaOutput(AMIGA_LEFT_BUTTON, buttonPressed(CLASSIC_BTN_y, &controllerData));
         setAmigaOutput(AMIGA_MIDDLE_BUTTON, buttonPressed(CLASSIC_BTN_a, &controllerData));
@@ -243,27 +273,28 @@ int main() {
 
         // handle digital joystick
         if (buttonPressed(CLASSIC_BTN_left, &controllerData)) {
-            xAxis -= 1;
+            xAxis -= toSubpixel(1);
         }
         if (buttonPressed(CLASSIC_BTN_right, &controllerData)) {
-            xAxis += 1;
+            xAxis += toSubpixel(1);
         }
         if (buttonPressed(CLASSIC_BTN_up, &controllerData)) {
-            yAxis -= 1;
+            yAxis -= toSubpixel(1);
         }
         if (buttonPressed(CLASSIC_BTN_down, &controllerData)) {
-            yAxis += 1;
+            yAxis += toSubpixel(1);
         }
        
 
         // handle analog joystick
-        int32_t analogX = applyDeadzone(controllerData.leftStickX, DEAD_ZONE_SIZE) / ANALOG_DIVIDER;
-        int32_t analogY = applyDeadzone(controllerData.leftStickY, DEAD_ZONE_SIZE) / ANALOG_DIVIDER;
-        xAxis += analogX;
-        yAxis += analogY;
+        // int32_t analogX = applyDeadzone(controllerData.leftStickX, DEAD_ZONE_SIZE) / ANALOG_DIVIDER;
+        // int32_t analogY = applyDeadzone(controllerData.leftStickY, DEAD_ZONE_SIZE) / ANALOG_DIVIDER;
+        xAxis += mapMouseSpeed(controllerData.leftStickX);
+        yAxis -= mapMouseSpeed(controllerData.leftStickY);
+        // yAxis -= analogY;
 
 
-        const int32_t CYCLES_PER_INTERVAL = CYCLES_PER_INTERVAL_DIGITAL;
+        const int32_t CYCLES_PER_INTERVAL = toSubpixel(CYCLES_PER_INTERVAL_DIGITAL);
 
         if (xAxis > CYCLES_PER_INTERVAL) {
             xAxis -= CYCLES_PER_INTERVAL;
@@ -283,10 +314,10 @@ int main() {
         }
 
         // printf("xAxis: %6d, yAxis: %6d\n", xAxis, yAxis);
-        printf("x: %6d, y: %6d\n", analogX, analogY);
+        // printf("x: %6d, y: %6d\n", analogX, analogY);
             
 
-        sleep_ms(1);
+        sleep_us(100);
     }
 
 }
