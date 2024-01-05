@@ -2,9 +2,6 @@
 
 #include "hardware/i2c.h"
 
-
-#define CLASSIC_CONTROLLER_ADDR 0x52 /* address of classic controller and nunchuck */
-
 bool initializeClassicController() {
     const uint8_t initData[] = { 0x40, 0x00 };
     const size_t initDataSize = sizeof(initData) / sizeof(initData[0]);
@@ -23,7 +20,7 @@ bool readClassicControllerData(ClassicControllerData* controllerData) {
         return false;
     }
 
-    sleep_us(300);
+    sleep_us(500);
 
     // now receive controller data
     uint8_t buf[6];
@@ -46,6 +43,3 @@ bool readClassicControllerData(ClassicControllerData* controllerData) {
     return true;
 }
 
-bool buttonPressed(ClassicButtons button, ClassicControllerData* controllerData) {
-    return !(controllerData->buttonData & button);
-}

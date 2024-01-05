@@ -26,7 +26,8 @@ endif()
 
 add_executable(Classic2AmigaMouseFW
         main.c
-        # classic_controller.c
+        classic_controller.c
+        amiga_mouse.c
         )
 
 # pull in common dependencies
