@@ -22,6 +22,12 @@ typedef enum
     AMIGA_MIDDLE_BUTTON = 12,
 } AmigaOutputGPIO;
 
+#define AMIGA_JOYSTICK_BUTTON AMIGA_LEFT_BUTTON
+#define AMIGA_JOYSTICK_LEFT   AMIGA_VQ_PULSE
+#define AMIGA_JOYSTICK_RIGHT  AMIGA_HQ_PULSE
+#define AMIGA_JOYSTICK_UP     AMIGA_V_PULSE
+#define AMIGA_JOYSTICK_DOWN   AMIGA_H_PULSE
+
 void initializeAmigaOutputGPIO();
 void setAmigaOutput(AmigaOutputGPIO output, bool value);
 void advanceAxisState(MouseAxis axis, uint32_t* state, int32_t direction);

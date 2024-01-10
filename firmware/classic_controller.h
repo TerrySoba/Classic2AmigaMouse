@@ -33,6 +33,6 @@ typedef struct ClassicControllerData_ {
 
 bool initializeClassicController();
 bool readClassicControllerData(ClassicControllerData* controllerData);
-bool buttonPressed(ClassicButtons button, ClassicControllerData* controllerData);
+bool buttonPressed(ClassicButtons button, const ClassicControllerData* controllerData);
 
 #endif

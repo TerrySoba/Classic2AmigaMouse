@@ -46,6 +46,6 @@ bool readClassicControllerData(ClassicControllerData* controllerData) {
     return true;
 }
 
-bool buttonPressed(ClassicButtons button, ClassicControllerData* controllerData) {
+bool buttonPressed(ClassicButtons button, const ClassicControllerData* controllerData) {
     return !(controllerData->buttonData & button);
 }
